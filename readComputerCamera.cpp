@@ -12,7 +12,7 @@ Mat contours_info(Mat image, vector<vector<Point>> contours);
 int main()
 {
     /// 需要調整的變數 ///
-    double epsilon = 5;        // DP Algorithm 的參數
+    double epsilon = 6.5;      // DP Algorithm 的參數
     int minContour = 6;        // 邊數小於 minContour 會被遮罩
     int maxContour = 30;       // 邊數大於 maxContour 會遮罩
     double lowerBondArea = 20; // 面積低於 lowerBondArea 的輪廓會被遮罩
@@ -74,7 +74,7 @@ Mat FiltGraph(Mat img)
     int hue_M = 123;
     int sat_m = 132;
     int sat_M = 255;
-    int val_m = 200;
+    int val_m = 10;
     int val_M = 255;
 
     Scalar lower(hue_m, sat_m, val_m);
@@ -109,7 +109,7 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
 
     Mat dp_image = Mat::zeros(image.size(), CV_8UC3); // 初始化 Mat 後才能使用 drawContours
     drawContours(dp_image, polyContours, -1, Scalar(255, 0, 255), 1, 0);
-    imshow("Contours Image (After DP):", dp_image);
+    imshow("Contours Image (1):", dp_image);
 
     // 3) 過濾不好的邊緣，用 badContour_mask 遮罩壞輪廓
     Mat badContour_mask = Mat::zeros(image.size(), CV_8UC3);
@@ -146,21 +146,27 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
     // 5) 簡化好輪廓 DP演算法
     vector<vector<Point>> polyContours2(contours2.size()); // 存放折線點的集合
     Mat dp_image_2 = Mat::zeros(dp_optim_v1_image.size(), CV_8UC3);
+
     for (size_t i = 0; i < contours2.size(); i++)
     {
         approxPolyDP(Mat(contours2[i]), polyContours2[i], epsilon, true);
     }
-    drawContours(dp_image_2, polyContours2, -1, Scalar(255, 0, 255), 1, 0);
 
+    drawContours(dp_image_2, polyContours2, 0, Scalar(255, 0, 255), 2, 0);
     Mat dp_image_text = dp_image_2.clone();
-    imshow("Contours Image (After DP):", dp_image_text);
+    imshow("Contours Image (2):", dp_image_text);
+    // drawContours(dp_image_text, polyContours2, 0, Scalar(255, 0, 255), 1, 0);
 
     // 7) 擬和旋轉矩形 + 邊長數量判斷字型 + 標示方塊中心點
     RotatedRect box;     // 旋轉矩形 class
     Point2f vertices[4]; // 旋轉矩形四頂點
     vector<Point> pt;    // 存一個contour中的點集合
+    int left_pt_count = 0;
+    int right_pt_count = 0;
+    int contourNumbers = polyContours2.size();
+    contourNumbers = (contourNumbers > 0) ? 1 : 0;
 
-    for (int a = 0; a < polyContours2.size(); a++)
+    for (int a = 0; a < contourNumbers; a++)
     {
         // A) 旋轉矩形
         pt.clear();
@@ -175,30 +181,44 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
         {
             line(dp_image_2, vertices[i], vertices[(i + 1) % 4], Scalar(0, 255, 0), 2); // 描出旋轉矩形
         }
-
         // 標示
         circle(dp_image_2, (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 0, Scalar(0, 255, 255), 8);     // 繪製中心點
         circle(original_image, (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 0, Scalar(0, 255, 255), 8); // 與原圖比較
 
-        // B) 判斷字母(用邊長個數篩選)
-        if (polyContours2[a].size() == 6)
-        { // L
-            // 標示
-            putText(dp_image_2, "L", (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 1, 3, Scalar(0, 255, 255), 3);
-            putText(original_image, "L", (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 1, 1, Scalar(0, 0, 255), 2);
+        for (int b = 0; b < polyContours2[a].size(); b++)
+        {
+            circle(dp_image_2, polyContours2[a][b], 0, Scalar(0, 255, 255), 4);
+            if (polyContours2[a][b].x < ((vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4).x)
+            {
+                left_pt_count++;
+            }
+            else
+            {
+                right_pt_count++;
+            }
         }
+        string direction = (left_pt_count < right_pt_count) ? "turn left" : "turn right";
+        putText(original_image, direction, Point(10, 25), 0, 0.8, Scalar(0, 255, 0), 1, 1, false);
 
-        if (polyContours2[a].size() == 8)
-        { // T、E (此時場上不會有 E)
-            // 標示
-            putText(dp_image_2, "E", (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 1, 3, Scalar(0, 255, 255), 3);
-            putText(original_image, "T", (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 1, 3, Scalar(0, 0, 255), 2);
-        }
+        // // B) 判斷字母(用邊長個數篩選)
+        // if (polyContours2[a].size() == 6)
+        // { // L
+        //     // 標示
+        //     putText(dp_image_2, "L", (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 1, 3, Scalar(0, 255, 255), 3);
+        //     putText(original_image, "L", (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 1, 1, Scalar(0, 0, 255), 2);
+        // }
+
+        // if (polyContours2[a].size() == 8)
+        // { // T、E (此時場上不會有 E)
+        //     // 標示
+        //     putText(dp_image_2, "E", (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 1, 3, Scalar(0, 255, 255), 3);
+        //     putText(original_image, "T", (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 1, 3, Scalar(0, 0, 255), 2);
+        // }
     }
-    imshow("contour info", contours_info(image, polyContours));
+    imshow("contour info", contours_info(dp_image_text, polyContours2));
 
     // imshow("D", dp_image_2);
-    imshow("E", original_image);
+    imshow("camera", original_image);
 }
 Mat contours_info(Mat image, vector<vector<Point>> contours)
 {
@@ -209,11 +229,17 @@ Mat contours_info(Mat image, vector<vector<Point>> contours)
 
     // 點數量
     int pt_count = 0;
-    for (size_t a = 0; a < contours.size(); a++)
+    int left_pt_count = 0;
+    int right_pt_count = 0;
+    int contourNumbers = contours.size();
+    contourNumbers = (contourNumbers > 0) ? 1 : 0;
+    for (size_t a = 0; a < contourNumbers; a++)
     {
         for (size_t b = 0; b < contours[a].size(); b++)
         {
+            circle(info_image, contours[a][b], 0, Scalar(0, 255, 255), 4);
             pt_count++;
+            // if (contours[a][b].x < )
         }
     }
     string name2 = "Number of Contours Points: " + to_string(pt_count);
