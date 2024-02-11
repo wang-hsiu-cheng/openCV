@@ -12,7 +12,7 @@ void filt_letter(Mat img);
 int main()
 {
     // 圖片路徑
-    string path = "C:\\Users\\TWang\\Desktop\\coding\\openCV\\roadline_test1.jpg";
+    string path = "C:\\Users\\TWang\\Desktop\\coding\\openCV\\pictureSource\\roadline_test1.jpg";
     Mat src = imread(path);
 
     filt_letter(src);

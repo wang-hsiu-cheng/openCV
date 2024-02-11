@@ -1,6 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#define PATH "C:/Users/TWang/Desktop/coding/openCV/auto.png"
+#define PATH "C:/Users/TWang/Desktop/coding/openCV/pictureSource/auto.png"
 
 using namespace std;
 using namespace cv;

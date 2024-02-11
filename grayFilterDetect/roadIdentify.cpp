@@ -1,6 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#define PATH "C:/Users/TWang/Desktop/coding/openCV/auto.png"
+#define PATH "C:/Users/TWang/Desktop/coding/openCV/pictureSource/roadline_test3.jpg"
 using namespace std;
 using namespace cv;
 
@@ -141,7 +141,6 @@ int main()
 
     while (true)
     {
-        string path = "C:\\Users\\TWang\\Desktop\\coding\\openCV\\roadline_test3.jpg";
         // resize(src, src, Size(src.cols / 2, src.rows / 2));
         bool ret = cap.read(img);
         if (!ret)
@@ -150,7 +149,7 @@ int main()
             break;
         }
 
-        img = imread(path);
+        img = imread(PATH);
 
         Mat original_image = img.clone();
         // GetROI(original_image, img);

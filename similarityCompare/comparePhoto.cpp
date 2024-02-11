@@ -1,8 +1,8 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#define PATH "C:/Users/TWang/Desktop/coding/openCV/auto.png"
-#define PATH1 "C:\\Users\\TWang\\Desktop\\coding\\openCV\\left_sample1.jpg"
-#define PATH2 "C:\\Users\\TWang\\Desktop\\coding\\openCV\\left_test1.jpg"
+#define PATH "C:/Users/TWang/Desktop/coding/openCV/pictureSource/auto.png"
+#define PATH1 "C:/Users/TWang/Desktop/coding/openCV/pictureSource/left_sample1.jpg"
+#define PATH2 "C:/Users/TWang/Desktop/coding/openCV/pictureSource/left_test1.jpg"
 
 using namespace std;
 using namespace cv;

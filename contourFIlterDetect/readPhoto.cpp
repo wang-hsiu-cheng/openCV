@@ -1,5 +1,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#define PATH "C:/Users/TWang/Desktop/coding/openCV/pictureSource/E_test.jpg"
 
 using namespace std;
 using namespace cv;
@@ -17,9 +18,8 @@ int main()
     int minContour = 3;        // 邊數小於 minContour 會被遮罩
     int maxContour = 6;        // 邊數大於 maxContour
     double lowerBondArea = 10; // 面積低於 lowerBondArea 的輪廓會被遮罩
-    string path = "C:\\Users\\TWang\\Desktop\\coding\\openCV\\E_test.jpg";
 
-    Mat src = imread(path);
+    Mat src = imread(PATH);
     resize(src, src, Size(src.cols / 2, src.rows / 2));
     Mat original_image = src.clone();
     src = filt_letter(src);
