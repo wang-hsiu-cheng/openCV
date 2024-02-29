@@ -30,7 +30,7 @@ Mat contours_info(Mat image, vector<vector<Point>> contours)
 
 int main()
 {
-    string path = "C:\\Users\\TWang\\Desktop\\coding\\openCV\\pictureSource\\left_sampl.jpg";
+    string path = "..\\pictureSource\\left_sampl.jpg";
     Mat src = imread(path);
     Mat grayImg(src.rows, src.cols, CV_8UC1);
     Mat contoursImg(src.rows, src.cols, CV_8UC3);
