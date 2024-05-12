@@ -1,6 +1,5 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#define PATH "../pictureSource/turnLeftSign.png"
 
 using namespace std;
 using namespace cv;
@@ -17,7 +16,7 @@ int main()
     int maxContour = 30;       // 邊數大於 maxContour 會遮罩
     double lowerBondArea = 20; // 面積低於 lowerBondArea 的輪廓會被遮罩
 
-    VideoCapture cap(1); // 鏡頭編號依序從 012...
+    VideoCapture cap(2); // 鏡頭編號依序從 012...
     Mat img;
 
     if (!cap.isOpened())
@@ -33,12 +32,12 @@ int main()
             cout << "Cant receive frame\n";
             break;
         }
-        // img = imread(PATH);
 
         Mat original_image = img.clone();
+        imshow("camera", original_image);
         // imwrite("../picturSource/out.jpg", img);
-        img = FiltGraph(img);
-        FiltContour(original_image, img, epsilon, minContour, maxContour, lowerBondArea);
+        // img = FiltGraph(img);
+        // FiltContour(original_image, img, epsilon, minContour, maxContour, lowerBondArea);
         if (waitKey(1) == 'q')
             break;
     }
@@ -75,26 +74,19 @@ Mat FiltGraph(Mat img)
     // int val_m = 147;
     // int val_M = 255;
     // blue range
-    // int hue_m = 94;
-    // int hue_M = 123;
-    // int sat_m = 91;
-    // int sat_M = 152;
-    // int val_m = 110;
-    // int val_M = 146;
-    // blue range new
-    int hue_m = 90;
-    int hue_M = 140;
-    int sat_m = 115;
-    int sat_M = 255;
-    int val_m = 0;
-    int val_M = 200;
+    // int hue_m = 52;
+    // int hue_M = 133;
+    // int sat_m = 52;
+    // int sat_M = 240;
+    // int val_m = 0;
+    // int val_M = 222;
     // blue(drawed) range
-    // int hue_m = 89;
-    // int hue_M = 123;
-    // int sat_m = 132;
-    // int sat_M = 255;
-    // int val_m = 10;
-    // int val_M = 255;
+    int hue_m = 89;
+    int hue_M = 123;
+    int sat_m = 132;
+    int sat_M = 255;
+    int val_m = 10;
+    int val_M = 255;
 
     Scalar lower(hue_m, sat_m, val_m);
     Scalar upper(hue_M, sat_M, val_M);
@@ -109,7 +101,7 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
 {
     string direction;
     cvtColor(image, image, COLOR_BGR2GRAY);
-    threshold(image, image, 10, 255, THRESH_BINARY);
+    threshold(image, image, 40, 255, THRESH_BINARY);
 
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;

@@ -1,6 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#define PATH "../pictureSource/turnLeftSign.png"
+#define PATH "../pictureSource/blueHSVtest1.png"
 
 using namespace std;
 using namespace cv;
@@ -12,37 +12,23 @@ Mat contours_info(Mat image, vector<vector<Point>> contours);
 int main()
 {
     /// 需要調整的變數 ///
-    double epsilon = 6.5;      // DP Algorithm 的參數
-    int minContour = 6;        // 邊數小於 minContour 會被遮罩
-    int maxContour = 30;       // 邊數大於 maxContour 會遮罩
-    double lowerBondArea = 20; // 面積低於 lowerBondArea 的輪廓會被遮罩
+    double epsilon = 8;          // DP Algorithm 的參數
+    int minContour = 6;          // 邊數小於 minContour 會被遮罩
+    int maxContour = 20;         // 邊數大於 maxContour 會遮罩
+    double lowerBondArea = 1000; // 面積低於 lowerBondArea 的輪廓會被遮罩
 
-    VideoCapture cap(1); // 鏡頭編號依序從 012...
     Mat img;
-
-    if (!cap.isOpened())
-    { // 確認有連線到該編號的鏡頭
-        cout << "Cannot open capture\n";
-    }
-
-    while (true)
+    img = imread(PATH);
+    if (img.empty())
     {
-        bool ret = cap.read(img);
-        if (!ret)
-        {
-            cout << "Cant receive frame\n";
-            break;
-        }
-        // img = imread(PATH);
-
-        Mat original_image = img.clone();
-        // imwrite("../picturSource/out.jpg", img);
-        img = FiltGraph(img);
-        FiltContour(original_image, img, epsilon, minContour, maxContour, lowerBondArea);
-        if (waitKey(1) == 'q')
-            break;
+        std::cerr << "Could not open or find the image!" << std::endl;
+        return -1;
     }
-    return 0;
+    Mat original_image = img.clone();
+    img = FiltGraph(img);
+    FiltContour(original_image, img, epsilon, minContour, maxContour, lowerBondArea);
+    if (waitKey(0) == 'q')
+        return 0;
 }
 
 Mat FiltGraph(Mat img)
@@ -75,13 +61,6 @@ Mat FiltGraph(Mat img)
     // int val_m = 147;
     // int val_M = 255;
     // blue range
-    // int hue_m = 94;
-    // int hue_M = 123;
-    // int sat_m = 91;
-    // int sat_M = 152;
-    // int val_m = 110;
-    // int val_M = 146;
-    // blue range new
     int hue_m = 90;
     int hue_M = 140;
     int sat_m = 115;
@@ -101,7 +80,7 @@ Mat FiltGraph(Mat img)
     inRange(img_hsv, lower, upper, mask);
 
     bitwise_and(img, img, result, mask);
-    // imshow("Letter Filted", result);
+    imshow("Letter Filted", result);
     return result;
 }
 
@@ -109,14 +88,14 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
 {
     string direction;
     cvtColor(image, image, COLOR_BGR2GRAY);
-    threshold(image, image, 10, 255, THRESH_BINARY);
+    threshold(image, image, 2, 255, THRESH_BINARY);
 
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
 
     // 1) 找出邊緣
     findContours(image, contours, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
-    // imshow("Contours Image (before DP)", image);
+    imshow("Contours Image (before DP)", image);
 
     vector<vector<Point>> polyContours(contours.size()); // polyContours 用來存放折線點的集合
 
@@ -127,11 +106,18 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
     }
 
     Mat dp_image = Mat::zeros(image.size(), CV_8UC3); // 初始化 Mat 後才能使用 drawContours
-    drawContours(dp_image, polyContours, -1, Scalar(255, 0, 255), 1, 0);
+    drawContours(dp_image, polyContours, -1, Scalar(255, 0, 255), 0, 0);
     imshow("Contours Image (1):", dp_image);
 
     // 3) 過濾不好的邊緣，用 badContour_mask 遮罩壞輪廓
     Mat badContour_mask = Mat::zeros(image.size(), CV_8UC3);
+
+    double largestArea = contourArea(polyContours[0]);
+    for (size_t a = 0; a < polyContours.size(); a++)
+    {
+        if (largestArea < contourArea(polyContours[a]))
+            largestArea = contourArea(polyContours[a]);
+    }
     for (size_t a = 0; a < polyContours.size(); a++)
     {
         // if 裡面如果是 true 代表該輪廓是不好的，會先被畫在 badContour)mask 上面
@@ -152,7 +138,7 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
     cvtColor(badContour_mask, badContour_mask, COLOR_BGR2GRAY);
     threshold(badContour_mask, badContour_mask, 0, 255, THRESH_BINARY_INV);
     bitwise_and(dp_image, dp_image, dp_optim_v1_image, badContour_mask);
-    // imshow("DP image (Optim v1): ", dp_optim_v1_image);
+    imshow("DP image (Optim v1): ", dp_optim_v1_image);
 
     // 4) 再從好的邊緣圖中找出邊緣
     cvtColor(dp_optim_v1_image, dp_optim_v1_image, COLOR_BGR2GRAY);
@@ -160,7 +146,7 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
     vector<vector<Point>> contours2;
     vector<Vec4i> hierarchy2;
 
-    findContours(dp_optim_v1_image, contours2, hierarchy2, RETR_LIST, CHAIN_APPROX_SIMPLE);
+    findContours(dp_optim_v1_image, contours2, hierarchy2, RETR_LIST, CHAIN_APPROX_NONE);
 
     // 5) 簡化好輪廓 DP演算法
     vector<vector<Point>> polyContours2(contours2.size()); // 存放折線點的集合
@@ -168,10 +154,10 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
 
     for (size_t i = 0; i < contours2.size(); i++)
     {
-        approxPolyDP(Mat(contours2[i]), polyContours2[i], epsilon, true);
+        approxPolyDP(Mat(contours2[i]), polyContours2[i], 1, true);
     }
-
-    drawContours(dp_image_2, polyContours2, 0, Scalar(255, 0, 255), 2, 0);
+    // cout << polyContours2.size();
+    drawContours(dp_image_2, polyContours2, -1, Scalar(255, 0, 255), 2, 0);
     Mat dp_image_text = dp_image_2.clone();
     imshow("Contours Image (2):", dp_image_text);
     // drawContours(dp_image_text, polyContours2, 0, Scalar(255, 0, 255), 1, 0);
@@ -187,6 +173,8 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
 
     for (int a = 0; a < contourNumbers; a++)
     {
+        left_pt_count = 0;
+        right_pt_count = 0;
         // A) 旋轉矩形
         pt.clear();
         for (int b = 0; b < polyContours2[a].size(); b++)
@@ -196,10 +184,10 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
         box = minAreaRect(pt); // 找到最小矩形，存到 box 中
         box.points(vertices);  // 把矩形的四個頂點資訊丟給 vertices，points()是 RotatedRect 的函式
 
-        for (int i = 0; i < 4; i++)
-        {
-            line(dp_image_2, vertices[i], vertices[(i + 1) % 4], Scalar(0, 255, 0), 2); // 描出旋轉矩形
-        }
+        // for (int i = 0; i < 4; i++)
+        // {
+        //     line(dp_image_2, vertices[i], vertices[(i + 1) % 4], Scalar(0, 255, 0), 2); // 描出旋轉矩形
+        // }
         // 標示
         circle(dp_image_2, (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 0, Scalar(0, 255, 255), 8);     // 繪製中心點
         circle(original_image, (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4, 0, Scalar(0, 255, 255), 8); // 與原圖比較
@@ -238,9 +226,9 @@ void FiltContour(Mat original_image, Mat image, double epsilon, int minContour, 
 
     // imshow("D", dp_image_2);
     imshow("camera", original_image);
-    // cout << direction << endl;
-    // cout << "left_pt_count" << left_pt_count << endl;
-    // cout << "right_pt_count" << right_pt_count << endl;
+    cout << direction << endl;
+    cout << "left_pt_count" << left_pt_count << endl;
+    cout << "right_pt_count" << right_pt_count << endl;
 }
 Mat contours_info(Mat image, vector<vector<Point>> contours)
 {

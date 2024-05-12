@@ -12,7 +12,7 @@ void filt_letter(Mat img);
 int main()
 {
     // 圖片路徑
-    string path = "..\\pictureSource\\roadline_test1.jpg";
+    string path = "../pictureSource/blueHSVtest.png";
     Mat src = imread(path);
 
     filt_letter(src);
