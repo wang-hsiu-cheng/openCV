@@ -9,7 +9,8 @@
                 "C:\\msys64\\mingw64\\include",
                 "C:\\msys64\\mingw64\\lib\\gcc\\x86_64-w64-mingw32\\13.2.0\\include",
                 "C:\\msys64\\mingw64\\include\\c++",
-                "D:\\Mingw_openCV\\OpenCV-MinGW-Build-OpenCV-4.5.5-x64\\include"
+                // "C:\\Mingw_openCV\\OpenCV-MinGW-Build-OpenCV-4.5.5-x64\\include"
+                "D:\\opencv\\build\\include"
             ],
             "defines": [
                 "_DEBUG",
